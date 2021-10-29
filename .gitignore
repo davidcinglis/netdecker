@@ -1,0 +1,6 @@
+*.env
+decklist-bot-venv/
+decklist_ocr/__pycache__/
+decklist_ocr/.vscode/
+decklist_ocr/env/
+pycord/
