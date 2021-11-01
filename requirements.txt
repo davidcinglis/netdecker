@@ -20,7 +20,6 @@ git+git://github.com/Pycord-Development/pycord.git@master#egg=py-cord
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pyparsing==3.0.3
-python-dotenv==0.19.1
 python-Levenshtein==0.12.2
 requests==2.26.0
 rsa==4.7.2
