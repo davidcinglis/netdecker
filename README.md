@@ -1,1 +1,1 @@
-TODO
+Magic: The Gathering Decklist OCR Bot
