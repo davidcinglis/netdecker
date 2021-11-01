@@ -1,11 +1,12 @@
 import os
 from decklist_ocr import decklist, ocr, formats
 import discord
+from dotenv import load_dotenv
+import logging
 
-if os.getenv("ENVIRONMENT") == "Development":
-    from dotenv import load_dotenv
-    load_dotenv()
+logging.basicConfig(level=logging.INFO)
 
+load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
 client = discord.Client()
@@ -25,6 +26,7 @@ async def on_message(message: discord.Message):
         return
     
     if message.content.startswith('!decklist'):
+        logging.info("Received user command.")
         tokens = message.content.split()
         if len(tokens) < 2:
             response = "Please specify a format for this decklist."

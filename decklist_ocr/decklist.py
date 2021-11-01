@@ -6,6 +6,7 @@ from decklist_ocr.ocr import GoogleOCR
 from decklist_ocr.text_storage import BoundingBox, Vertex
 from typing import List
 from decklist_ocr import formats
+import logging
 
 FUZZY_MATCHING_THRESHOLD = 91
 
@@ -178,6 +179,7 @@ def generate_decklist(uri, recognizer, format):
     if not reference_card_file:
         return "Invalid format specified. Formats are %s." % formats.serialize()
     textboxes = recognizer.detect_text_uri(uri)
+    logging.info("Recognizer detected %d textboxes" % len(textboxes))
 
     with open(reference_card_file) as f:
         reference_cardset = [line.strip() for line in f]
@@ -187,6 +189,9 @@ def generate_decklist(uri, recognizer, format):
         for textbox in textboxes:
             line = preprocess_line_text(textbox.text)
             parse_line(line, textbox.bounding_box, reference_cardset, decklist, quantities)
-            
+
+    logging.info("Detected %d maindeck cards." % len(decklist.maindeck))
+    logging.info("Deteced %d sideboard cards." % len(decklist.sideboard))
+    logging.info("Detected %d quantities" % len(quantities))            
     match_quantities(decklist, quantities)
     return decklist.serialize()
