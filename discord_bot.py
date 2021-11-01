@@ -44,9 +44,9 @@ async def on_message(message: discord.Message):
             await message.channel.send(response)
             return
         
+        thread = await message.create_thread(name="Decklist")
         url = message.reference.resolved.attachments[0].url
         deck = decklist.generate_decklist(url, ocr.GoogleOCR(), format)
-        thread = await message.create_thread(name="Decklist")
         await thread.send(deck)
 
 client.run(TOKEN)
