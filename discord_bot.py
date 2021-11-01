@@ -1,9 +1,11 @@
 import os
-from dotenv import load_dotenv
 from decklist_ocr import decklist, ocr, formats
 import discord
 
-load_dotenv()
+if os.getenv("ENVIRONMENT") == "Development":
+    from dotenv import load_dotenv
+    load_dotenv()
+
 TOKEN = os.getenv('DISCORD_TOKEN')
 
 client = discord.Client()
