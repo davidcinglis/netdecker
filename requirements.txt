@@ -16,7 +16,7 @@ multidict==5.2.0
 packaging==21.0
 proto-plus==1.19.7
 protobuf==3.19.0
-git+git://github.com/Pycord-Development/pycord.git#egg=py-cord
+git+git://github.com/Pycord-Development/pycord.git@master#egg=py-cord
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pyparsing==3.0.3
