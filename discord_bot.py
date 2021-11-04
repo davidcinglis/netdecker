@@ -1,5 +1,7 @@
 import os
-from decklist_ocr import decklist, ocr, formats
+from dotenv import load_dotenv
+from decklist_ocr import decklist, ocr
+from decklist_ocr.cardfile_data import formats
 import discord
 from dotenv import load_dotenv
 import logging

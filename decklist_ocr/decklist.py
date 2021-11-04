@@ -1,14 +1,18 @@
 import string
 import re
-from thefuzz import fuzz
-from thefuzz import process
-from decklist_ocr.ocr import GoogleOCR
+import Levenshtein
 from decklist_ocr.text_storage import BoundingBox, Vertex
 from typing import List
+<<<<<<< HEAD
 from decklist_ocr import formats
 import logging
+=======
+from decklist_ocr.cardfile_data import cardfile
+>>>>>>> a104786b997c5779a52c115b1a4136260f1583f2
 
-FUZZY_MATCHING_THRESHOLD = 91
+# a value of N allows 1 mistake for every N characters
+DISTANCE_THRESHOLD = 4
+MAX_CARD_LENGTH = 34
 
 
 class CardQuantity:
@@ -59,9 +63,54 @@ class Decklist:
         else:
             add_or_increment(self.maindeck, card)
 
+    def companion_check(self):
+        """ In Arena screenshots the companion shows up in both the maindeck
+            and sideboard (as the first card in both). This function checks
+            if the first maindeck/sideboard card is the same companion, and if
+            so puts that card in the companion slot instead.
+        """
+        if len(self.maindeck) == 0 or len(self.sideboard) == 0:
+            return
+        
+        maindeck_first = self.maindeck[0]
+        sideboard_first = self.sideboard[0]
+
+        if maindeck_first.name != sideboard_first.name:
+            return
+        
+        if maindeck_first.quantity != 1 or sideboard_first.quantity != 1:
+            return
+        
+        if cardfile.is_companion(maindeck_first.name):
+            self.companion = CardTuple(maindeck_first.name, None, 1)
+            self.maindeck = self.maindeck[1:]
+            self.sideboard = self.sideboard[1:]
+    
+    def match_quantities(self, quantities: List[CardQuantity]):
+        """ Matches each quantity object to the closest card.
+        """
+        for quantity in quantities:
+            position = quantity.bounding_box.upper_left_vertex
+            closest_card = None
+            closest_distance = None
+            for card in self.maindeck:
+                card_left_corner = card.bounding_box.upper_left_vertex
+                card_right_corner = card.bounding_box.lower_right_vertex
+
+                # The card has to be above and to the left of the quantity.
+                if card_left_corner.x > position.x or card_left_corner.y > position.y:
+                    continue
+                current_distance = position.distance(card_right_corner)
+                if not closest_distance or closest_distance > current_distance:
+                    closest_distance = current_distance
+                    closest_card = card
+            if closest_card is not None:
+                closest_card.quantity = quantity.quantity
+
     def serialize(self):
         output = ""
         if self.companion is not None:
+            output += "Companion\n"
             output += self.companion.serialize() + "\n"
         
         output += "Deck\n"
@@ -74,7 +123,6 @@ class Decklist:
                 output += card_tuple.serialize()
         
         return output
-
 
 def preprocess_line_text(line):
     """ Some preprocessing on the raw line to strip whitespace and any
@@ -100,7 +148,7 @@ def preprocess_line_text(line):
     return line
 
 
-def parse_line(line, bounding_box, card_dataset, decklist, quantities):
+def parse_line(line, bounding_box, format, decklist, quantities):
     """ The actual parsing logic for each line of input text. Decides if the
         line is a card name, a card quantity, or noise, and handles each case
         accordingly.
@@ -117,49 +165,59 @@ def parse_line(line, bounding_box, card_dataset, decklist, quantities):
         quantity objects.
     """
 
+    # Check for the sideboard label
     if decklist.sideboard_position is None and \
-       fuzz.partial_ratio(line, "Sideboard") > 95:
+       Levenshtein.distance(line, "Sideboard") < 5:
             decklist.sideboard_position = bounding_box.upper_left_vertex
             return
     
+    # Check for a card quantity (x4)
     match = re.search("[xX][1-9][0-9]*", line)
     if match:
         quantity = int(match.group(0)[1:])
         quantities.append(CardQuantity(quantity, bounding_box))
         return
 
-    # Each card name is at least 3 characters.
     elif len(line) < 3:
+        # Card names are >= 3 characters, and we already checked for quantities
         return
     
+    # TODO Consider refactoring this part of the function
     else:
-        # TODO something more efficient than iterating through the entire cardset
-        choice, ratio = process.extractOne(line, card_dataset)
-        if ratio > FUZZY_MATCHING_THRESHOLD:
+        choice = ""
+        match_length = len(line)
+        is_truncated = False
+        if line[-3:] == "...":
+            line = line[:-3]
+            match_length = len(line) - 3
+            is_truncated = True
+        
+        # first try to get an exact match with the card name
+        exact_match = cardfile.name_from_alias(line, format, is_truncated)
+        if exact_match is not None:
+            choice = exact_match
+        
+        # if that fails, iterate through all cards with a similar length name
+        # and try to find a strong partial match.
+        else:
+            if is_truncated:
+                candidates = cardfile.names_in_range(match_length + 3, MAX_CARD_LENGTH, format)
+            else:
+                candidates = cardfile.names_in_range(match_length - 5, match_length + 5, format)
+            for candidate in candidates:
+                if is_truncated:
+                    dist = Levenshtein.distance(candidate[:len(line)], line)
+                else:
+                    dist = Levenshtein.distance(candidate, line)
+                max_distance = max(len(candidate), len(line)) // DISTANCE_THRESHOLD
+                if dist <= max_distance:
+                    choice = candidate
+                    cardfile.add_alias(line, candidate)
+                    break
+        
+        if choice != "":
             card = CardTuple(choice, bounding_box)
             decklist.add_card(card)
-
-
-def match_quantities(decklist: Decklist, quantities: List[CardQuantity]):
-    """ Matches each quantity object to the closest card.
-    """
-    for quantity in quantities:
-        position = quantity.bounding_box.upper_left_vertex
-        closest_card = None
-        closest_distance = None
-        for card in decklist.maindeck:
-            card_left_corner = card.bounding_box.upper_left_vertex
-            card_right_corner = card.bounding_box.lower_right_vertex
-
-            # The card has to be above and to the left of the quantity.
-            if card_left_corner.x > position.x or card_left_corner.y > position.y:
-                continue
-            current_distance = position.distance(card_right_corner)
-            if not closest_distance or closest_distance > current_distance:
-                closest_distance = current_distance
-                closest_card = card
-        if closest_card is not None:
-            closest_card.quantity = quantity.quantity
 
 
 def generate_decklist(uri, recognizer, format):
@@ -175,23 +233,18 @@ def generate_decklist(uri, recognizer, format):
     Returns:
         str: The serialized decklist.
     """
-    reference_card_file = formats.get_cardlist(format)
-    if not reference_card_file:
-        return "Invalid format specified. Formats are %s." % formats.serialize()
+    
     textboxes = recognizer.detect_text_uri(uri)
+    decklist = Decklist()
+    quantities = []
     logging.info("Recognizer detected %d textboxes" % len(textboxes))
-
-    with open(reference_card_file) as f:
-        reference_cardset = [line.strip() for line in f]
-        decklist = Decklist()
-        quantities = []
-
-        for textbox in textboxes:
-            line = preprocess_line_text(textbox.text)
-            parse_line(line, textbox.bounding_box, reference_cardset, decklist, quantities)
-
+    for textbox in textboxes:
+        line = preprocess_line_text(textbox.text)
+        parse_line(line, textbox.bounding_box, format, decklist, quantities)        
+    
     logging.info("Detected %d maindeck cards." % len(decklist.maindeck))
     logging.info("Deteced %d sideboard cards." % len(decklist.sideboard))
-    logging.info("Detected %d quantities" % len(quantities))            
-    match_quantities(decklist, quantities)
+    logging.info("Detected %d quantities" % len(quantities))    
+    decklist.match_quantities(quantities)
+    decklist.companion_check()
     return decklist.serialize()
