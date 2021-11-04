@@ -4,3 +4,6 @@ decklist_ocr/__pycache__/
 decklist_ocr/.vscode/
 decklist_ocr/env/
 pycord/
+dbd-env/
+__pycache__
+*.db
