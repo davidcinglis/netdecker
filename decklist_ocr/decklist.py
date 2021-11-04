@@ -3,12 +3,8 @@ import re
 import Levenshtein
 from decklist_ocr.text_storage import BoundingBox, Vertex
 from typing import List
-<<<<<<< HEAD
-from decklist_ocr import formats
 import logging
-=======
 from decklist_ocr.cardfile_data import cardfile
->>>>>>> a104786b997c5779a52c115b1a4136260f1583f2
 
 # a value of N allows 1 mistake for every N characters
 DISTANCE_THRESHOLD = 4
