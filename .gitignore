@@ -6,4 +6,3 @@ decklist_ocr/env/
 pycord/
 dbd-env/
 __pycache__
-*.db
