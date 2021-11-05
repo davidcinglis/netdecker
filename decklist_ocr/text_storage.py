@@ -52,17 +52,15 @@ class BoundingBox:
                             bounding_poly.vertices[3].y)
         return cls(upper_left, upper_right, lower_right, lower_left)
 
+    def get_height(self):
+        return self.lower_left_vertex.y - self.upper_left_vertex.y
+
     def isAdjacent(self, candidate: BoundingBox):
         return self.upper_right_vertex.y_delta(candidate.upper_left_vertex) <= ADJACENCY_THRESHOLD and \
                self.lower_right_vertex.y_delta(candidate.lower_left_vertex) <= ADJACENCY_THRESHOLD
     
     def serialize(self):
-        output = ''
-        output += "Upper Left Vertex: %d, %d\n" % (self.upper_left_vertex.x, self.upper_left_vertex.y)
-        output += "Upper Right Vertex: %d, %d\n" % (self.upper_right_vertex.x, self.upper_right_vertex.y)
-        output += "Lower Right Vertex: %d, %d\n" % (self.lower_right_vertex.x, self.lower_right_vertex.y)
-        output += "Lower Left Vertex: %d, %d\n" % (self.lower_left_vertex.x, self.lower_left_vertex.y)
-        return output
+        return "(%d, %d)" % (self.upper_left_vertex.x, self.upper_left_vertex.y)
 
     
 class Textbox:

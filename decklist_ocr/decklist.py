@@ -7,7 +7,11 @@ import logging
 from decklist_ocr.cardfile_data import cardfile
 
 # a value of N allows 1 mistake for every N characters
-DISTANCE_THRESHOLD = 4
+DISTANCE_THRESHOLD = 6
+
+# The approximate number of characters in a name before Arena truncates it
+TRUNCATION_THRESHOLD = 20
+
 MAX_CARD_LENGTH = 34
 
 
@@ -90,11 +94,18 @@ class Decklist:
             closest_card = None
             closest_distance = None
             for card in self.maindeck:
+                if card.quantity > 1:
+                    continue
                 card_left_corner = card.bounding_box.upper_left_vertex
                 card_right_corner = card.bounding_box.lower_right_vertex
 
                 # The card has to be above and to the left of the quantity.
                 if card_left_corner.x > position.x or card_left_corner.y > position.y:
+                    continue
+                
+                # The card name should be just a little bit above the quantity.
+                # The height of the quantity is a good way to judge this
+                if quantity.bounding_box.get_height() * 2 < position.y_delta(card_left_corner):
                     continue
                 current_distance = position.distance(card_right_corner)
                 if not closest_distance or closest_distance > current_distance:
@@ -163,13 +174,14 @@ def parse_line(line, bounding_box, format, decklist, quantities):
 
     # Check for the sideboard label
     if decklist.sideboard_position is None and \
-       Levenshtein.distance(line, "Sideboard") < 5:
+       Levenshtein.distance(line, "Sideboard") < 4:
             decklist.sideboard_position = bounding_box.upper_left_vertex
             return
     
     # Check for a card quantity (x4)
     match = re.search("[xX][1-9][0-9]*", line)
     if match:
+        logging.info("Found quantity match %s for line %s at position %s" % (match, line, bounding_box.serialize()))
         quantity = int(match.group(0)[1:])
         quantities.append(CardQuantity(quantity, bounding_box))
         return
@@ -183,7 +195,7 @@ def parse_line(line, bounding_box, format, decklist, quantities):
         choice = ""
         match_length = len(line)
         is_truncated = False
-        if line[-3:] == "...":
+        if len(line) > TRUNCATION_THRESHOLD and line[-3:] == "...":
             line = line[:-3]
             match_length = len(line) - 3
             is_truncated = True
@@ -199,7 +211,11 @@ def parse_line(line, bounding_box, format, decklist, quantities):
             if is_truncated:
                 candidates = cardfile.names_in_range(match_length + 3, MAX_CARD_LENGTH, format)
             else:
-                candidates = cardfile.names_in_range(match_length - 5, match_length + 5, format)
+                # The OCR-generated names are rarely any shorter
+                # than the actual name. But sometimes it thinks the mana cost
+                # is part of the card name and adds a few extra characters at
+                # the end, so we need to look at slightly shorter card names.
+                candidates = cardfile.names_in_range(match_length - 3, match_length + 1, format)
             for candidate in candidates:
                 if is_truncated:
                     dist = Levenshtein.distance(candidate[:len(line)], line)
@@ -212,8 +228,11 @@ def parse_line(line, bounding_box, format, decklist, quantities):
                     break
         
         if choice != "":
+            logging.info("Matching input %s with choice %s at position %s" % (line, choice, bounding_box.serialize()))
             card = CardTuple(choice, bounding_box)
             decklist.add_card(card)
+        else:
+            logging.info("Discarding input %s." % line)
 
 
 def generate_decklist(uri, recognizer, format):
