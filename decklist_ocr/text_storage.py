@@ -1,7 +1,11 @@
 from __future__ import annotations
 import math
 from google.cloud.vision_v1.types.geometry import BoundingPoly
-ADJACENCY_THRESHOLD = 3
+
+# The maximum distance gap tolerated between two words,
+# when determining whether they are adjacent.
+MAX_VERTICAL_GAP = 6
+MAX_HORIZONTAL_GAP = 12
 
 class Vertex:
     """ Class to store a single point on the image being parsed.
@@ -56,11 +60,15 @@ class BoundingBox:
         return self.lower_left_vertex.y - self.upper_left_vertex.y
 
     def isAdjacent(self, candidate: BoundingBox):
-        return self.upper_right_vertex.y_delta(candidate.upper_left_vertex) <= ADJACENCY_THRESHOLD and \
-               self.lower_right_vertex.y_delta(candidate.lower_left_vertex) <= ADJACENCY_THRESHOLD
+        return self.upper_right_vertex.y_delta(candidate.upper_left_vertex) <= MAX_VERTICAL_GAP and \
+               self.lower_right_vertex.y_delta(candidate.lower_left_vertex) <= MAX_VERTICAL_GAP and \
+               self.upper_right_vertex.x_delta(candidate.upper_left_vertex) <= MAX_HORIZONTAL_GAP and \
+               self.lower_right_vertex.x_delta(candidate.lower_left_vertex) <= MAX_HORIZONTAL_GAP
     
     def serialize(self):
-        return "(%d, %d)" % (self.upper_left_vertex.x, self.upper_left_vertex.y)
+        return "(%d, %d) to (%d, %d)" % \
+        (self.upper_left_vertex.x, self.upper_left_vertex.y,
+        self.lower_right_vertex.x, self.lower_right_vertex.y)
 
     
 class Textbox:

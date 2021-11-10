@@ -14,6 +14,10 @@ TRUNCATION_THRESHOLD = 20
 
 MAX_CARD_LENGTH = 34
 
+# The minimum height needed to be classified as a card, as a fraction of
+# the average height among all potential cards.
+MIN_HEIGHT_FRACTION = .7
+
 
 class CardQuantity:
     """Represents a card quantity (e.g. "x2") on the decklist image."""
@@ -114,6 +118,16 @@ class Decklist:
             if closest_card is not None:
                 closest_card.quantity = quantity.quantity
 
+    def cull_outliers(self):
+        """ Removes detected card names that are abnormally small compared to
+            to the average card name. This helps the text on the body of the
+            card from being misinterpreted as a card name.
+        """
+        heights = [card.bounding_box.get_height() for card in self.maindeck]
+        mean_height = sum(heights) / len(heights)
+        height_threshold = mean_height * MIN_HEIGHT_FRACTION
+        self.maindeck = [card for card in self.maindeck if card.bounding_box.get_height() > height_threshold]
+    
     def serialize(self):
         output = ""
         if self.companion is not None:
@@ -232,7 +246,7 @@ def parse_line(line, bounding_box, format, decklist, quantities):
             card = CardTuple(choice, bounding_box)
             decklist.add_card(card)
         else:
-            logging.info("Discarding input %s." % line)
+            logging.info("Discarding input %s at position %s" % (line, bounding_box.serialize()))
 
 
 def generate_decklist(uri, recognizer, format):
@@ -259,7 +273,8 @@ def generate_decklist(uri, recognizer, format):
     
     logging.info("Detected %d maindeck cards." % len(decklist.maindeck))
     logging.info("Deteced %d sideboard cards." % len(decklist.sideboard))
-    logging.info("Detected %d quantities" % len(quantities))    
+    logging.info("Detected %d quantities" % len(quantities))
+    decklist.cull_outliers()  
     decklist.match_quantities(quantities)
     decklist.companion_check()
     return decklist.serialize()

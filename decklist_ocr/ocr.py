@@ -29,25 +29,17 @@ class GoogleOCR(OCR):
         client = vision.ImageAnnotatorClient()
         image = vision.Image()
         image.source.image_uri = uri
-        response = client.document_text_detection(image=image)
-        document = response.full_text_annotation
+        response = client.text_detection(image=image)
+        words = response.text_annotations[1:]
 
         textboxes = []
-        for page in document.pages:
-            for block in page.blocks:
-                for paragraph in block.paragraphs:
-                    # Iterate through each word in the paragraph.
-                    # If it's on the same line as the previous word,
-                    # join them together into a textbox.
-                    # Otherwise start a new textbox.
-                    current_textbox = Textbox()
-                    for word in paragraph.words:
-                        word_text = ''.join([symbol.text for symbol in word.symbols])
-                        curr_bounds = BoundingBox.init_from_bounding_poly(word.bounding_box)
-                        if not current_textbox.isAdjacent(curr_bounds):
-                            textboxes.append(current_textbox)
-                            current_textbox = Textbox()
-                        current_textbox.addWord(curr_bounds, word_text)
-                    textboxes.append(current_textbox)
-                
+        current_textbox = Textbox()
+        for word in words:
+            curr_bounds = BoundingBox.init_from_bounding_poly(word.bounding_poly)
+            if not current_textbox.isAdjacent(curr_bounds):
+                textboxes.append(current_textbox)
+                current_textbox = Textbox()
+            current_textbox.addWord(curr_bounds, word.description)
+        textboxes.append(current_textbox)
+        
         return textboxes
