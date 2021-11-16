@@ -5,4 +5,6 @@ decklist_ocr/.vscode/
 decklist_ocr/env/
 pycord/
 dbd-env/
+dbd-venv/
+.idea/
 __pycache__
