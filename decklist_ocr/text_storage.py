@@ -4,8 +4,9 @@ from google.cloud.vision_v1.types.geometry import BoundingPoly
 
 # The maximum distance gap tolerated between two words,
 # when determining whether they are adjacent.
-MAX_VERTICAL_GAP = 6
-MAX_HORIZONTAL_GAP = 12
+# Measured as a ratio to the height of the word.
+MAX_VERTICAL_GAP = .2
+MAX_HORIZONTAL_GAP = 1
 
 class Vertex:
     """ Class to store a single point on the image being parsed.
@@ -23,6 +24,10 @@ class Vertex:
     def distance(self, target: Vertex) -> float:
         return math.sqrt((self.x_delta(target) ** 2 + 
                           self.y_delta(target) ** 2))
+
+    def vertical_is_between(self, v1, v2):
+        return v1.y <= self.y <= v2.y
+
     
 class BoundingBox:
     """ Class to store the bounds of a piece of text. 
@@ -60,10 +65,13 @@ class BoundingBox:
         return self.lower_left_vertex.y - self.upper_left_vertex.y
 
     def isAdjacent(self, candidate: BoundingBox):
-        return self.upper_right_vertex.y_delta(candidate.upper_left_vertex) <= MAX_VERTICAL_GAP and \
-               self.lower_right_vertex.y_delta(candidate.lower_left_vertex) <= MAX_VERTICAL_GAP and \
-               self.upper_right_vertex.x_delta(candidate.upper_left_vertex) <= MAX_HORIZONTAL_GAP and \
-               self.lower_right_vertex.x_delta(candidate.lower_left_vertex) <= MAX_HORIZONTAL_GAP
+        vertical_check = self.upper_right_vertex.vertical_is_between(candidate.upper_left_vertex, candidate.lower_left_vertex) or \
+                         candidate.upper_left_vertex.vertical_is_between(self.upper_right_vertex, self.lower_right_vertex)
+        upper_x_delta = self.upper_right_vertex.x_delta(candidate.upper_left_vertex)
+        lower_x_delta = self.lower_right_vertex.x_delta(candidate.lower_left_vertex)
+        mean_x_delta = (upper_x_delta + lower_x_delta) / 2
+        horizontal_check = mean_x_delta / self.get_height() <= MAX_HORIZONTAL_GAP
+        return vertical_check and horizontal_check
     
     def serialize(self):
         return "(%d, %d) to (%d, %d)" % \
@@ -94,11 +102,13 @@ class Textbox:
         if not self.text:
             self.text = text
         else:
-            self.text += ' '  + text
+            self.text += ' ' + text
     
     def isAdjacent(self, candidate: BoundingBox):
         if not self.bounding_box:
             return True
+        elif self.bounding_box.get_height() == 0:
+            return False
         else:
             return self.bounding_box.isAdjacent(candidate)
  

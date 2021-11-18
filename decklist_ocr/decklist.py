@@ -16,7 +16,7 @@ MAX_CARD_LENGTH = 34
 
 # The minimum height needed to be classified as a card, as a fraction of
 # the average height among all potential cards.
-MIN_HEIGHT_FRACTION = .7
+MIN_HEIGHT_FRACTION = .65
 
 
 class CardQuantity:
@@ -207,13 +207,13 @@ def parse_line(line, bounding_box, format, decklist, quantities):
     # TODO Consider refactoring this part of the function
     else:
         choice = ""
-        match_length = len(line)
+
         is_truncated = False
-        if len(line) > TRUNCATION_THRESHOLD and line[-3:] == "...":
-            line = line[:-3]
-            match_length = len(line) - 3
+        if len(line) > TRUNCATION_THRESHOLD and "..." in line:
+            line = line.split("...")[0]
             is_truncated = True
-        
+        match_length = len(line)
+
         # first try to get an exact match with the card name
         exact_match = cardfile.name_from_alias(line, format, is_truncated)
         if exact_match is not None:
