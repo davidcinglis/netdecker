@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from google.cloud import vision
-from decklist_ocr.text_storage import Textbox, BoundingBox
+from netdecker.text_storage import Textbox, BoundingBox
 from typing import List
 
 

@@ -1,7 +1,7 @@
 from os import name
 import sqlite3 as sl
 
-DATABASE_PATH = "decklist_ocr/cardfile_data/cards.db"
+DATABASE_PATH = "netdecker/cardfile_data/cards.db"
 
 def is_companion(card_name):
     con = sl.connect(DATABASE_PATH)

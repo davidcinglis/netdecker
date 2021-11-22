@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
-from decklist_ocr import decklist, ocr
-from decklist_ocr.cardfile_data import formats
+from netdecker import decklist, ocr
+from netdecker.cardfile_data import formats
 import discord
 from dotenv import load_dotenv
 import logging
