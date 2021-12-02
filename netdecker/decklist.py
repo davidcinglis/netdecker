@@ -16,7 +16,7 @@ MAX_CARD_LENGTH = 34
 
 # The minimum height needed to be classified as a card, as a fraction of
 # the average height among all potential cards.
-MIN_HEIGHT_FRACTION = .65
+MIN_HEIGHT_FRACTION = .55
 
 
 class CardQuantity:
@@ -126,6 +126,9 @@ class Decklist:
         heights = [card.bounding_box.get_height() for card in self.maindeck]
         mean_height = sum(heights) / len(heights)
         height_threshold = mean_height * MIN_HEIGHT_FRACTION
+        logging.info("Mean height threshold: %f" % height_threshold)
+        for card in self.maindeck:
+            logging.info("Card %s has height: %d" % (card.name, card.bounding_box.get_height()))
         self.maindeck = [card for card in self.maindeck if card.bounding_box.get_height() > height_threshold]
     
     def serialize(self):
