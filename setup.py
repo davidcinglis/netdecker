@@ -1,7 +1,4 @@
 import setuptools
-import site
-import sys
-site.ENABLE_USER_SITE = "--user" in sys.argv[1:]
 
 with open("README.md", "r", encoding="utf-8") as f:
     long_description = f.read()
@@ -14,9 +11,9 @@ setuptools.setup(
     description="Creates importable decklists from MTG deck images.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/davidcinglis/decklist-ocr",
+    url="https://github.com/davidcinglis/netdecker",
     project_urls={
-        "Bug Tracker": "https://github.com/davidcinglis/decklist-ocr/issues",
+        "Bug Tracker": "https://github.com/davidcinglis/netdecker/issues",
     },
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -24,6 +21,6 @@ setuptools.setup(
         "Operation System :: OS Independent",
     ],
     package_dir={"": "netdecker"},
-    packages=setuptools.find_packages(where="src"),
+    packages=setuptools.find_packages(where="netdecker"),
     python_requires=">=3.6",
 )
