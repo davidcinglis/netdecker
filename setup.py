@@ -20,7 +20,6 @@ setuptools.setup(
         "License :: OSI Approved :: GNU GPLv3",
         "Operation System :: OS Independent",
     ],
-    package_dir={"": "netdecker"},
-    packages=setuptools.find_packages(where="netdecker"),
+    packages=setuptools.find_packages(),
     python_requires=">=3.6",
 )
