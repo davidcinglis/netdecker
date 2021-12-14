@@ -21,6 +21,7 @@ setuptools.setup(
         "Operation System :: OS Independent",
     ],
     packages=setuptools.find_packages(),
+    package_data={'' : ['cardfile_data/cards.db']},
     python_requires=">=3.6",
     install_requires=[
         'google-cloud-vision',
