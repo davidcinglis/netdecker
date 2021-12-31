@@ -121,12 +121,17 @@ class Decklist:
     def cull_outliers(self):
         """ Removes detected card names that are abnormally small compared to
             to the average card name. This helps the text on the body of the
-            card from being misinterpreted as a card name.
+            card from being misinterpreted as a card name.Only operates on the 
+            maindeck for now because Arena sideboard cards do not have any 
+            body text on them, and the body text on MTGO cards is too similar 
+            in size to the title text for this process to distinguish the two.
         """
-        heights = [card.bounding_box.get_height() for card in self.maindeck]
-        mean_height = sum(heights) / len(heights)
-        height_threshold = mean_height * MIN_HEIGHT_FRACTION
-        self.maindeck = [card for card in self.maindeck if card.bounding_box.get_height() > height_threshold]
+        if len(self.maindeck) > 0:
+            heights = [card.bounding_box.get_height() for card in self.maindeck]
+            mean_height = sum(heights) / len(heights)
+            height_threshold = mean_height * MIN_HEIGHT_FRACTION
+            self.maindeck = [card for card in self.maindeck if \
+                             card.bounding_box.get_height() > height_threshold]
     
     def serialize(self):
         output = ""
