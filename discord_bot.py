@@ -46,10 +46,14 @@ async def on_message(message: discord.Message):
             await message.channel.send(response)
             return
         
-        thread = await message.create_thread(name="Decklist")
         url = message.reference.resolved.attachments[0].url
-        deck = decklist.generate_decklist(url, ocr.GoogleOCR(), format)
-        await thread.send(deck)
+        response = decklist.generate_decklist(url, ocr.GoogleOCR(), format)
+
+        if response.success:
+            thread = await message.create_thread(name="Decklist")
+            await thread.send(response.decklist.serialize())
+        else:
+            await message.channel.send("Invalid image url.")
 
 client.run(TOKEN)
 

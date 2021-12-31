@@ -145,6 +145,11 @@ class Decklist:
         
         return output
 
+class DecklistResponse:
+    def __init__(self, success=False, decklist=None):
+        self.success = success
+        self.decklist = decklist
+
 def preprocess_line_text(line):
     """ Some preprocessing on the raw line to strip whitespace and any
         garbage characters the OCR might have picked up.
@@ -263,18 +268,24 @@ def generate_decklist(uri, recognizer, format):
         str: The serialized decklist.
     """
     
-    textboxes = recognizer.detect_text_uri(uri)
-    decklist = Decklist()
-    quantities = []
-    logging.info("Recognizer detected %d textboxes" % len(textboxes))
-    for textbox in textboxes:
-        line = preprocess_line_text(textbox.text)
-        parse_line(line, textbox.bounding_box, format, decklist, quantities)        
-    
-    logging.info("Detected %d maindeck cards." % len(decklist.maindeck))
-    logging.info("Deteced %d sideboard cards." % len(decklist.sideboard))
-    logging.info("Detected %d quantities" % len(quantities))
-    decklist.cull_outliers()  
-    decklist.match_quantities(quantities)
-    decklist.companion_check()
-    return decklist.serialize()
+    ocr_response = recognizer.detect_text_uri(uri)
+    decklist_response = DecklistResponse(ocr_response.success)
+
+    if not decklist_response.success:
+        return decklist_response
+    else:
+        decklist = Decklist()
+        quantities = []
+        logging.info("Recognizer detected %d textboxes" % len(ocr_response.textboxes))
+        for textbox in ocr_response.textboxes:
+            line = preprocess_line_text(textbox.text)
+            parse_line(line, textbox.bounding_box, format, decklist, quantities)        
+        
+        logging.info("Detected %d maindeck cards." % len(decklist.maindeck))
+        logging.info("Deteced %d sideboard cards." % len(decklist.sideboard))
+        logging.info("Detected %d quantities" % len(quantities))
+        decklist.cull_outliers()  
+        decklist.match_quantities(quantities)
+        decklist.companion_check()
+        decklist_response.decklist = decklist
+        return decklist_response

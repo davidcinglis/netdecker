@@ -3,11 +3,17 @@ from google.cloud import vision
 from netdecker.text_storage import Textbox, BoundingBox
 from typing import List
 
+class OCRResponse:
+    def __init__(self, success: bool, textboxes: List[Textbox], 
+                 error_message: str = None):
+        self.success = success
+        self.textboxes = textboxes
+        self.error_message = error_message
 
 class OCR(ABC):
 
     @abstractmethod
-    def detect_text_uri(self, uri: str) -> List[Textbox]:
+    def detect_text_uri(self, uri: str) -> OCRResponse:
         """ Takes a uri to an image and converts the OCR result into the
             proper Textbox format.
 
@@ -26,20 +32,26 @@ class GoogleOCR(OCR):
     def detect_text_uri(self, uri):
         """ Google Cloud Vision implementation of the decklist ocr.
         """
+        ocr_response = OCRResponse(True, [], None)
+
         client = vision.ImageAnnotatorClient()
         image = vision.Image()
         image.source.image_uri = uri
         response = client.text_detection(image=image)
-        words = response.text_annotations[1:]
 
-        textboxes = []
-        current_textbox = Textbox()
-        for word in words:
-            curr_bounds = BoundingBox.init_from_bounding_poly(word.bounding_poly)
-            if not current_textbox.isAdjacent(curr_bounds):
-                textboxes.append(current_textbox)
-                current_textbox = Textbox()
-            current_textbox.addWord(curr_bounds, word.description)
-        textboxes.append(current_textbox)
+        if response.error.message:
+            ocr_response.success = False
+            ocr_response.error_message = response.error.message
         
-        return textboxes
+        else:
+            words = response.text_annotations[1:]
+            current_textbox = Textbox()
+            for word in words:
+                curr_bounds = BoundingBox.init_from_bounding_poly(word.bounding_poly)
+                if not current_textbox.isAdjacent(curr_bounds):
+                    ocr_response.textboxes.append(current_textbox)
+                    current_textbox = Textbox()
+                current_textbox.addWord(curr_bounds, word.description)
+            ocr_response.textboxes.append(current_textbox)
+        
+        return ocr_response
