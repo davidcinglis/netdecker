@@ -145,10 +145,7 @@ class DecklistParser:
         for textbox in self.textboxes:
             line = self.preprocess_line_text(textbox.text)
             self.parse_line(line, textbox.bounding_box)        
-        
-        logging.info("Detected %d maindeck cards." % len(self.decklist.maindeck))
-        logging.info("Deteced %d sideboard cards." % len(self.decklist.sideboard))
-        logging.info("Detected %d quantities" % len(self.quantities))
+
         self.decklist.cull_outliers()  
         self.decklist.match_quantities(self.quantities)
         self.decklist.companion_check()

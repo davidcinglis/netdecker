@@ -105,7 +105,7 @@ class Decklist:
                     closest_card = card
             if closest_card is not None:
                 closest_card.quantity = quantity.quantity
-
+    
     def cull_outliers(self):
         """ Removes detected card names that are abnormally small compared to
             to the average card name. This helps the text on the body of the
@@ -138,6 +138,10 @@ class Decklist:
         
         return output
 
+    def deck_size(self):
+        maindeck_count = sum([card.quantity for card in self.maindeck])
+        sideboard_count = sum([card.quantity for card in self.sideboard])
+        return maindeck_count, sideboard_count
 
 class DecklistResponse:
     def __init__(self, success: bool = False, decklist: Decklist = None):

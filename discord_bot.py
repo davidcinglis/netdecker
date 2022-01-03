@@ -51,6 +51,8 @@ async def on_message(message: discord.Message):
 
         if response.success:
             thread = await message.create_thread(name="Decklist")
+            await thread.send("Identified %d maindeck cards and %d sideboard cards." % \
+                              response.decklist.deck_size())
             await thread.send(response.decklist.serialize())
         else:
             await message.channel.send("Invalid image url.")
