@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from netdecker import decklist, ocr
+from netdecker import decklist_parser, ocr
 from netdecker.cardfile_data import formats
 import discord
 from dotenv import load_dotenv
@@ -47,7 +47,7 @@ async def on_message(message: discord.Message):
             return
         
         url = message.reference.resolved.attachments[0].url
-        response = decklist.generate_decklist(url, ocr.GoogleOCR(), format)
+        response = decklist_parser.generate_decklist(url, ocr.GoogleOCR(), format)
 
         if response.success:
             thread = await message.create_thread(name="Decklist")
