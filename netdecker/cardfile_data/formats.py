@@ -1,7 +1,8 @@
 from typing import List, Optional
 
 supported_formats = [
-    "standard", "historic", "pioneer", "modern", "legacy", "vintage", "pauper"
+    "standard", "historic", "alchemy", "pioneer", "modern", 
+    "legacy", "vintage", "pauper"
 ]
 
 def get_cardlist(input: str) -> Optional[str]:

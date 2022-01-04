@@ -3,7 +3,7 @@ import sqlite3 as sl
 import formats
 
 def generate_card_records():
-    scryfall_url = "https://c2.scryfall.com/file/scryfall-bulk/oracle-cards/oracle-cards-20211111220441.json"
+    scryfall_url = "https://c2.scryfall.com/file/scryfall-bulk/oracle-cards/oracle-cards-20220103220423.json"
     card_dict = requests.get(scryfall_url).json()
     card_objects = []
     card_legalities = []
@@ -25,7 +25,7 @@ def generate_card_records():
     return card_objects, card_legalities
 
 
-con = sl.connect("decklist_ocr/cardfile_data/cards.db")
+con = sl.connect("netdecker/cardfile_data/cards.db")
 card_objects, card_legalities = generate_card_records()
 
 with con:
