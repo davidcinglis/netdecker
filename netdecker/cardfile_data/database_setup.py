@@ -3,7 +3,7 @@ import sqlite3 as sl
 import formats
 
 def generate_card_records():
-    scryfall_url = "https://c2.scryfall.com/file/scryfall-bulk/oracle-cards/oracle-cards-20220211220421.json"
+    scryfall_url = "https://c2.scryfall.com/file/scryfall-bulk/oracle-cards/oracle-cards-20220323210443.json"
     card_dict = requests.get(scryfall_url).json()
     card_objects = []
     card_legalities = []
