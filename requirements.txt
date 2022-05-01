@@ -21,7 +21,7 @@ pluggy==1.0.0
 proto-plus==1.19.7
 protobuf==3.19.0
 py==1.11.0
-git+https://github.com/Pycord-Development/pycord.git@id2if2d#egg=py-cord
+git+https://github.com/Pycord-Development/pycord.git@1d21f2d#egg=py-cord
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pyparsing==3.0.3
