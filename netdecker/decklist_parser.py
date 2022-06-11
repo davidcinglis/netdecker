@@ -150,12 +150,12 @@ class DecklistParser:
         self.decklist.match_quantities(self.quantities)
         self.decklist.companion_check()
     
-def generate_decklist(uri: str, recognizer: OCR, format: str):
+def generate_decklist(img_b64, recognizer: OCR, format: str):
     """ The actual payoff function to be called externally. Invokes the
         recognizer, creates a decklist parser to handle the payoff, then creates
         and returns a decklist response.
     """
-    ocr_response = recognizer.detect_text_uri(uri)
+    ocr_response = recognizer.detect_text_uri(img_b64)
     decklist_response = DecklistResponse(ocr_response.success)
 
     # If the OCR was unsuccessful we can skip straight to the response.

@@ -46,8 +46,8 @@ async def on_message(message: discord.Message):
             await message.channel.send(response)
             return
         
-        url = message.reference.resolved.attachments[0].url
-        response = decklist_parser.generate_decklist(url, ocr.GoogleOCR(), format)
+        img_b64 = await message.reference.resolved.attachments[0].read()
+        response = decklist_parser.generate_decklist(img_b64, ocr.GoogleOCR(), format)
 
         if response.success:
             thread = await message.create_thread(name="Decklist")

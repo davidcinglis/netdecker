@@ -13,7 +13,7 @@ class OCRResponse:
 class OCR(ABC):
 
     @abstractmethod
-    def detect_text_uri(self, uri: str) -> OCRResponse:
+    def detect_text_uri(self, b64_img) -> OCRResponse:
         """ Takes a uri to an image and converts the OCR result into the
             proper Textbox format.
 
@@ -29,14 +29,13 @@ class OCR(ABC):
 
 class GoogleOCR(OCR):
 
-    def detect_text_uri(self, uri):
+    def detect_text_uri(self, img_b64):
         """ Google Cloud Vision implementation of the decklist ocr.
         """
         ocr_response = OCRResponse(True, [], None)
 
         client = vision.ImageAnnotatorClient()
-        image = vision.Image()
-        image.source.image_uri = uri
+        image = vision.Image(content=img_b64)
         response = client.text_detection(image=image)
 
         if response.error.message:
