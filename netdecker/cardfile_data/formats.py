@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 supported_formats = [
-    "standard", "historic", "alchemy", "pioneer", "modern", 
+    "standard", "explorer", "historic", "alchemy", "pioneer", "modern", 
     "legacy", "vintage", "pauper"
 ]
 
