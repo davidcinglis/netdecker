@@ -1,0 +1,2 @@
+import pytest
+from netdecker.decklist_storage import Decklist
